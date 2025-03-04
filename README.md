@@ -6,7 +6,7 @@ for [GLaDOS](https://github.com/dnhkng/GLaDOS) of course, I could never.
 
 GLaDOS is an amazing project dedicated to building a real-life version of GLaDOS!
 
-If you want to chat or join the community, [Join their discord!](https://discord.com/invite/ERTDKwpjNB) If you want to support, [sponsor the project here!](https://ko-fi.com/dnhkng)
+If you want to chat or join their community, [Join the discord!](https://discord.com/invite/ERTDKwpjNB) If you want to support, [sponsor the project here!](https://ko-fi.com/dnhkng)
 
 https://github.com/user-attachments/assets/c22049e4-7fba-4e84-8667-2c6657a656a0
 
@@ -184,4 +184,4 @@ Want to mess around with the AI models? You can test the systems by exploring th
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=dnhkng/GlaDOS&type=Date)](https://star-history.com/#dnhkng/GlaDOS&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=RisPNG/AIDirector&type=Date)](https://star-history.com/#dnhkng/GlaDOS&Date)
