@@ -20,10 +20,10 @@ from sounddevice import CallbackFlags
 import yaml
 
 from .ASR import VAD, AudioTranscriber
-from .TTS import tts_glados, tts_kokoro
+from .TTS import tts_glados, tts_kokoro, tts_custom
 from .utils import spoken_text_converter as stc
 
-logger.remove(0)
+logger.remove()
 logger.add(sys.stderr, level="SUCCESS")
 
 
@@ -54,6 +54,7 @@ class GladosConfig(BaseModel):
     wake_word: str | None = None
     voice: str
     announcement: str | None = None
+    prepend_message: str | None = None
     personality_preprompt: list[PersonalityPrompt]
 
     @classmethod
@@ -132,6 +133,7 @@ class Glados:
         wake_word: str | None = None,
         personality_preprompt: tuple[dict[str, str], ...] = DEFAULT_PERSONALITY_PREPROMPT,
         announcement: str | None = None,
+        config: GladosConfig = None,
     ) -> None:
         """
         Initialize the Glados voice assistant with configuration parameters.
@@ -155,6 +157,8 @@ class Glados:
             interruptible (bool, optional): Whether the assistant's speech can be interrupted.
                 Defaults to True.
         """
+        self.config = config
+        
         self.completion_url = completion_url
         self.model = model
         self.wake_word = wake_word
@@ -203,7 +207,7 @@ class Glados:
         if announcement:
             audio = self._tts.generate_speech_audio(announcement)
             logger.success(f"TTS text: {announcement}")
-            sd.play(audio, self._tts.sample_rate)
+            sd.play(audio, self._tts.sample_rate, device=37)
             if not self.interruptible:
                 sd.wait()
 
@@ -270,11 +274,16 @@ class Glados:
         asr_model = AudioTranscriber()
         vad_model = VAD()
 
-        tts_model: tts_glados.Synthesizer | tts_kokoro.Synthesizer
+        # Choose TTS module based on voice configuration.
+        # If the voice is "glados", use the glados TTS module.
+        # Otherwise, if the voice is one of the Kokoro voices that our custom TTS supports,
+        # use our custom synthesizer. Otherwise, fallback to the original Kokoro synthesizer.
         if config.voice == "glados":
             tts_model = tts_glados.Synthesizer()
+        elif config.voice in tts_custom.list_available_voices():
+            tts_model = tts_custom.Synthesizer(voice=config.voice)
         else:
-            assert config.voice in tts_kokoro.get_voices(), f"Voice '{config.wake_word}' not available"
+            assert config.voice in tts_kokoro.get_voices(), f"Voice '{config.voice}' not available"
             tts_model = tts_kokoro.Synthesizer(voice=config.voice)
 
         return cls(
@@ -288,6 +297,7 @@ class Glados:
             wake_word=config.wake_word,
             announcement=config.announcement,
             personality_preprompt=tuple(config.to_chat_messages()),
+            config=config
         )
 
     @classmethod
@@ -627,6 +637,9 @@ class Glados:
         while not self.shutdown_event.is_set():
             try:
                 detected_text = self.llm_queue.get(timeout=0.1)
+                if self.config.prepend_message:
+                    detected_text = f"{self.config.prepend_message} {detected_text}"
+                    
                 self.messages.append({"role": "user", "content": detected_text})
 
                 data = {
@@ -648,39 +661,22 @@ class Glados:
                     sentence = []
                     for line in response.iter_lines():
                         if self.processing is False:
-                            break  # If the stop flag is set from new voice input, halt processing
-                        if line:  # Filter out empty keep-alive new lines
+                            break
+                        if line:  # Filter out empty lines
                             try:
                                 cleaned_line = self._clean_raw_bytes(line)
-                                if cleaned_line:  # Add check for empty cleaned line
+                                if cleaned_line:
                                     chunk = self._process_chunk(cleaned_line)
                                     if chunk:
                                         sentence.append(chunk)
-                                        # If there is a pause token, send the sentence to the TTS queue
-                                        if (
-                                            chunk
-                                            in [
-                                                ".",
-                                                "!",
-                                                "?",
-                                                ":",
-                                                ";",
-                                                "?!",
-                                                "\n",
-                                                "\n\n",
-                                            ]
-                                            and sentence[-2].isdigit() is False
-                                        ):  # Don't split on numbers!
-                                            logger.info(f"Chunk: {chunk}")
-                                            self._process_sentence(sentence)
-                                            sentence = []
                             except Exception as e:
                                 logger.error(f"Error processing line: {e}")
                                 continue
 
                     if self.processing and sentence:
                         self._process_sentence(sentence)
-                    self.tts_queue.put("<EOS>")  # Add end of stream token to the queue
+                    self.tts_queue.put("<EOS>")
+
             except queue.Empty:
                 time.sleep(self.PAUSE_TIME)
 
@@ -846,7 +842,7 @@ class Glados:
                     continue
 
                 if len(audio_msg.audio):
-                    sd.play(audio_msg.audio, self._tts.sample_rate)
+                    sd.play(audio_msg.audio, self._tts.sample_rate, device=37)
                     total_samples = len(audio_msg.audio)
 
                     logger.success(f"TTS text: {audio_msg.text}")
@@ -900,7 +896,7 @@ class Glados:
 
         # If the TTS was cut off, make that clear
         if words_to_print < len(tokens):
-            text = text + "<INTERRUPTED>"
+            text = text + "."
         return text
 
 
