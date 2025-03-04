@@ -90,7 +90,12 @@ Install the PortAudio library, if you don't yet have it installed:
 
    Windows:
 
-   `python scripts\install.py`
+   ```bash
+   python scripts\install.py
+   uv pip install kokoro misaki soundfile huggingface-hub gradio pydub espeakng-loader phonemizer-fork wheel setuptools num2words spacy aiofiles annotated-types anyio attrs av babel blis catalogue certifi cffi charset-normalizer click cloudpathlib cn2an colorama confection contourpy csvw curated-tokenizers curated-transformers cutlet cycler cymem distro dlinfo docopt fastapi ffmpy filelock fonttools fsspec fugashi g2pk2 gradio_client greenlet h11 httpcore httpx idna inflect isodate jaconv jamo jieba Jinja2 jiter joblib jsonschema jsonschema-specifications kiwisolver langcodes language_data language-tags loguru marisa-trie markdown-it-py MarkupSafe matplotlib mdurl mojimoji more-itertools mpmath munch murmurhash mutagen networkx nltk numpy nvidia-cublas-cu12 nvidia-cuda-cupti-cu12 nvidia-cuda-nvrtc-cu12 nvidia-cuda-runtime-cu12 nvidia-cudnn-cu12 nvidia-cufft-cu12 nvidia-curand-cu12 nvidia-cusolver-cu12 nvidia-cusparse-cu12 nvidia-cusparselt-cu12 nvidia-nvjitlink-cu12 nvidia-nvtx-cu12 openai ordered-set orjson packaging pandas pillow pip preshed proces psutil pycparser pydantic pydantic_core pydantic-settings Pygments pyparsing pypinyin python-dateutil python-dotenv python-multipart pytz PyYAML rdflib referencing regex requests rfc3986 rich rpds-py ruff safehttpx safetensors scipy segments semantic-version shellingham six smart-open sniffio spacy-curated-transformers spacy-legacy spacy-loggers SQLAlchemy srsly starlette sympy thinc tiktoken tokenizers tomlkit tqdm transformers typeguard typer typing_extensions tzdata unidic-lite uritemplate urllib3 uvicorn wasabi weasel websockets wrapt git+https://github.com/m-bain/whisperX.git
+   ```
+
+   Yeah, I know, I will figure out only the necessary packages soon.
 
    This will install Glados and download the needed AI models
 3. To start GLaDOS, run:
